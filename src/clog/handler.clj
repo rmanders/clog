@@ -1,18 +1,20 @@
 (ns clog.handler
-  (:require [compojure.core :refer :all]
-            [compojure.route :as route]
-            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]))
+  (:use compojure.core)
+  (:require [compojure.route :as route]
+            [compojure.handler :as handler]
+            [ring.middleware.json :refer [wrap-json-body]]
+            [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+            [clog.handlers.bloghandlers :refer :all]
+            [mount.core :as mount]))
 
-(def route-get-user-posts [userId]
-  (str "All posts for user: " userId))
-
-(defroutes app-routes
-  (GET "/" [] "Display all public posts for all users")
-  (GET "/user/:userId/posts/:postId" [] "Specific Post Page")
-  (POST "/user/:userId/posts/" [] "Post a new entry here")
-  (GET "/user/:userId/posts/" [] "Gets all posts for a given user")
-  (DELETE "/user/:userId/posts/:postId" [] "Delete a specific post")
-  (route/not-found "Not Found"))
+(defroutes main-routes
+           (GET "/" [] "<p>this is the main page</p>")
+           (GET "/test" request ((test-handler request)))
+           (GET "/api/info" request (info-handler))
+           (GET "/api/blog/posts" [] "this returns a list of blog posts in order of date")
+           (POST "/api/blog/posts" request "this saves a new blog post object")
+           (route/not-found "Page not found"))
 
 (def app
-  (wrap-defaults app-routes site-defaults))
+  (do (mount/start)
+      (-> (handler/site main-routes))))
